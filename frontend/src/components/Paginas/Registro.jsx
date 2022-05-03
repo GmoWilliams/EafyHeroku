@@ -1,5 +1,6 @@
 import React, {useState} from "react";
 import axios from "axios";
+import Swal from 'sweetalert2'
 const bcrypt = require('bcryptjs');
 
 function Registro() {
@@ -29,6 +30,8 @@ function Registro() {
         event.preventDefault();
         input.contraseña = bcrypt.hashSync(input.contraseña, 10);
 
+        input.contraseña = bcrypt.hashSync(input.contraseña, 10);
+
         // crear objeto para pasar a servidor
         const nUsuario = {
             nombre: input.nombre,
@@ -36,13 +39,46 @@ function Registro() {
             contraseña: input.contraseña
         }
 
+        if ((nUsuario.nombre !== "") && (nUsuario.email !== "") && (nUsuario.contraseña !== "")){
+            consultaUsuario(nUsuario)
+ 
+        }else {
+            Swal.fire({
+                title: 'Error!',
+                text: 'Ningun dato debe estar vacio!',
+                icon: 'error',
+                confirmButtonText: 'OK!'
+              })
+        }
         
 
-        // pasar datos a servidor o bd.
-        axios.post("/registrar", nUsuario);
 
+        // pasar datos a servidor o bd.
+        
+        
     }
 
+    async function consultaUsuario(nUsuario){
+        const result = await axios.post("/Consulta", nUsuario);
+        const status = result.status
+        console.log(status);
+
+        if (status===200){
+            axios.post("/registrar", nUsuario);
+            Swal.fire('Te haz registrado correctamente!')
+            
+        }
+        if (status===201){
+            Swal.fire({
+                title: 'Error!',
+                text: 'Este email ya esta en uso',
+                icon: 'error',
+                confirmButtonText: 'OK!'
+              })
+        }
+        
+        
+    }
 
 
 
@@ -54,8 +90,6 @@ function Registro() {
 
             <main class="form-signin">
                 <form>
-
-
                     <div class="form-floating">
                         <input
                             onChange={handleChange}

@@ -49,7 +49,7 @@ const Usuario = new mongoose.model("Usuario", usuarioSchema);
 var excelModel = new mongoose.model("Excel", excelSchema);
 var movimientosModel = new mongoose.model("MovimientosUsuario", movimientosUsuarioSchema);
 
-//Método post
+//Método POST
 app.post("/registrar", function (req, res){
     // guardar variables
     const usuarioFormulario = req.body.nombre;
@@ -115,48 +115,20 @@ app.post("/login", async (req, res) => {
     }
 });
 
-/*
-app.post("/subirExcel", upload.single('excel'), uploadMovimientos);
-function uploadMovimientos(req, res) {    
-    var workbook = XLSX.read(req.file.buffer);
-    var sheet_name_list = workbook.SheetNames;
-    var data = XLSX.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
-    var account = "";
-    var output = "";
-    var count = 0;
-    for (let line of data) {
-        if (Object.keys(line).length >= 4 && line["CONTPAQ i"] !== undefined && line["__EMPTY"] !== "") {
-            if (String(line["CONTPAQ i"]).match(/\d{3}-\d{3}/)) {
-                account = line["CONTPAQ i"];
-            } else {
-                if (Object.keys(line).length >= 6 && line["CONTPAQ i"] !== "Fecha") {
-                    output += "REGISTRO " + (++count) + "-----------------------------\n";
-                    output += "CUENTA: " + account + "\n";  
-                    output += "FECHA: " + line["CONTPAQ i"] + "\n";  
-                    output += "TIPO: " + line["__EMPTY"] + "\n";  
-                    output += "NUMERO: " + line["__EMPTY_1"] + "\n";
-                    output += "CONCEPTO: " + line["Lecar Consultoria en TI, S.C."] + "\n";
-                    output += "REFERENCIA: " + line["__EMPTY_2"] + "\n";
-                    output += "CARGOS: " + line["__EMPTY_3"] + "\n";
-                    output += "ABONOS: " + line["__EMPTY_4"] + "\n";
-                    output += "SALDO: " + line["Hoja:      1"] + "\n";  
-                }
-            }
-        }
+
+app.post("/Consulta", async (req, res) => {
+    const {nombre, email, contraseña} = req.body
+    const user = await Usuario.findOne({email})
+
+    if(!user){
+        res.status(200)
+        res.send({ error: 'Usuario no encontrado' })
+        return 
+    }else{
+        res.status(201)
+        res.send({ error: 'Usuario encontrado' })
+        return 
     }
-    console.log(output);
-
-    return res.status(201).send(output);
-}
-*/
-
-//Método get para movimientos
-app.get("/recibirMovimientos", (req, res) => {
-    movimientosModel.find().then( (result) => {
-        res.send(result);
-    }).catch( (err) => {
-        console.log(err);
-    })
 });
 
 //////// 2 fragmentos necesarios para implementar heroku
@@ -173,7 +145,7 @@ if(process.env.NODE_ENV === 'production') {
     // cambio de puerto en heroku
     let port = process.env.PORT;
     if (port == null || port == "") {
-    port = 5000;
+    port = 3200;
     }
 ////////// 2 fragmentos necesarios para implementar heroku
 
