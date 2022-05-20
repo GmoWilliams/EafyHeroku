@@ -71,7 +71,7 @@ var mov_Model = new mongoose.model("excel_mov_Aux", movimientos_Schema, "excel_m
 var catalogo_Model = new mongoose.model("excel_catalogo", catalogo_Schema, "excel_catalogo");
 var movimientosModel = new mongoose.model("MovimientosUsuario", movimientosUsuarioSchema);
 
-//Método post
+//Método POST
 app.post("/registrar", function (req, res){
     // guardar variables
     const usuarioFormulario = req.body.nombre;
@@ -118,6 +118,7 @@ app.post("/login", async (req, res) => {
         return
     }
 });
+
 
 
 app.post("/subirMovimientos", upload.single('excel'), uploadMovimientos);
@@ -272,6 +273,7 @@ app.get("/recibirMovimientos", (req, res) => {
     }).catch( (err) => {
         console.log(err);
     })
+
 });
 //////// 2 fragmentos necesarios para implementar heroku
 
@@ -287,7 +289,7 @@ if(process.env.NODE_ENV === 'production') {
     // cambio de puerto en heroku
     let port = process.env.PORT;
     if (port == null || port == "") {
-    port = 5000;
+    port = 3200;
     }
 ////////// 2 fragmentos necesarios para implementar heroku
 
