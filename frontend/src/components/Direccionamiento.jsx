@@ -23,8 +23,10 @@ function Direccionamiento({loggedIn, setLoggedIn, userEmail, setUserEmail, userC
                                                                     userContraseña={userContraseña}/>} />
             <Route path="/descargarPDF_BC" element={<PDF_BalanceDeC userEmail={userEmail} 
                                                                     userContraseña={userContraseña}/>} />
-            <Route class={loggedIn? 'hidden' : undefined} path="/login" element={<Login setUserEmail={setUserEmail} setUserContraseña={setUserContraseña} setLoggedIn={setLoggedIn}/>} />
-            <Route class={loggedIn? 'hidden' : undefined} path="/registro" element={<Registro setUserEmail={setUserEmail} setUserContraseña={setUserContraseña} />} />
+            
+            { !loggedIn ? <Route path="/login" element={<Login setUserEmail={setUserEmail} setUserContraseña={setUserContraseña} setLoggedIn={setLoggedIn}/>} /> : null }
+            
+            { !loggedIn ? <Route path="/registro" element={<Registro setUserEmail={setUserEmail} setUserContraseña={setUserContraseña} />} /> : null }
             <Route path="/dashboard" element={<Dashboard userEmail={userEmail} userContraseña={userContraseña} />} />
             {/*
             <Route element={<RequireAuth />}>
