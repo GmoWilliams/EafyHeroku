@@ -1,9 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, {useRef, useLayoutEffect, useState } from "react";
 import axios from "axios";
 import { Helmet } from 'react-helmet';
 import Select from 'react-select';
 import swal from 'sweetalert';
 import Pdf from "react-to-pdf";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import html2canvas from "html2canvas";
+
+
 
 const reference2 = React.createRef();
 
@@ -31,6 +36,18 @@ function DescargarPDF_ER( {userEmail, userContraseña} ){
         { label: 'Noviembre',   value: 'nov'},
         { label: 'Diciembre',   value: 'dic'}
     ]
+
+    const targetRef = useRef();
+    const [dimensions, setDimensions] = useState({ width:0, height: 0 });
+
+    useLayoutEffect(() => {
+        if (targetRef.current) {
+        setDimensions({
+            width: targetRef.current.offsetWidth,
+            height: targetRef.current.offsetHeight
+        });
+        }
+    }, []);
 
     const handleSelect_Mes_Rep1 = (event) => {
         Mes_Rep1 = event.value;
@@ -376,8 +393,42 @@ function DescargarPDF_ER( {userEmail, userContraseña} ){
     const options = {
         orientation: 'portrait',
         unit: 'in',
-        format: [40,13]
+        format: [612,792]
     };
+
+    /*
+    var divHeight = dimensions.height
+    var divWidth = dimensions.width;
+    var ratio = divHeight / divWidth;
+    
+
+    
+    const imprimirPDF = () => {
+        html2canvas(document.getElementById("myModal1"), {
+            height: divHeight,
+            width: divWidth,
+            onrendered: function(canvas) {
+                console.log("aver qpez");
+                var image = canvas.toDataURL("image/jpeg");
+                var doc = new jsPDF(); // using defaults: orientation=portrait, unit=mm, size=A4
+                var width = doc.internal.pageSize.getWidth();    
+                var height = doc.internal.pageSize.getHeight();
+                height = ratio * width;
+                doc.addImage(image, 'JPEG', 0, 0, width-20, height-10);
+                doc.save('Estado de Resultados.pdf'); //Download the rendered PDF.
+                console.log("intento de descarga");
+            }
+        });
+    }*/
+
+    const imprimirPDF = () => {
+        const doc = new jsPDF();
+        autoTable(doc, {html:"#tablaER"});
+        console.log(doc);
+        doc.save("Estado de Resultados.pdf");
+
+    }
+    
 
     return(
         <div className="container micontenedor">
@@ -386,7 +437,7 @@ function DescargarPDF_ER( {userEmail, userContraseña} ){
             </Helmet>
             <h1>Tu Estado de Resultados </h1>
                 <div className="col-md-auto align-items-center text-center">
-                    <h5>¿No es correcto? Pulsa "Actualizar Estado de Resultados"</h5>
+                    <h5>Selecciona el periodo de tu reporte:</h5>
                 </div>
                     {/* generarReporteER() */}
                     <h4>Mes Inicial: </h4>
@@ -408,36 +459,37 @@ function DescargarPDF_ER( {userEmail, userContraseña} ){
         
                     {/*Boton Estado de Resultados*/}
                     <div className="col-md-auto align-items-center text-center">
-                                <a href="#myModal1" className="btn btn-primary btn-lg btn-costum-size" role="button" onClick={() => generarReporteER()}>Actualizar Estado de Resultados</a>
+                                <a href="#myModal1" className="btn btn-primary btn-lg btn-costum-size" role="button" onClick={() => generarReporteER()}>Generar Estado de Resultados</a>
                                 
                                 {/*
                                 Modalidad Estado de resultados generada al presionar el boton
                                 */}
     
-                                <div id="myModal1" ref={reference2} >
+                                <div id="myModal1" ref={targetRef} >
                                     
                                         <div className="modal-dialog modal-xl" role="document">
                                             <div className="modal-content">
                                                 <div className="modal-header">
                                                     <h5 className="modal-title" id="exampleModalLongTitle">Estado de Resultados</h5>
                                                     
-                                                    <Pdf targetRef={reference2} filename="Estado de Resultados.pdf">
-                                                        {({ toPdf }) => <button className="btn btn-primary" onClick={toPdf}>Descargar PDF "Estado de Resultados"</button>}
-                                                    </Pdf>
+                                                    
+                                                        {<button className="btn btn-primary" onClick={() => imprimirPDF()}>Descargar PDF "Estado de Resultados"</button>}
+                                                    
                                                 
                                                 </div>
                                                 <div className="modal-body">
                                                     <section className ="flex-container">
                                                         <table id="tablaER" className="table-responsive table-borderless">
                                                             <thead>
-                                                                <th scope="col"></th>
-                                                                <th className="tituloCentro" scope="col">Periodo</th>
-                                                                <th className="tituloCentro" scope="col">%</th>
-                                                                <th className="tituloCentro" scope="col">Acomulado</th>
-                                                                <th className="tituloCentro" scope="col">%</th>
                                                             </thead>
                                                             <tbody>
-
+                                                                <tr>
+                                                                    <th scope="col"></th>
+                                                                    <th className="tituloCentro" scope="col">Periodo</th>
+                                                                    <th className="tituloCentro" scope="col">%</th>
+                                                                    <th className="tituloCentro" scope="col">Acomulado</th>
+                                                                    <th className="tituloCentro" scope="col">%</th>
+                                                                </tr>
                                                             </tbody>
                                                         </table>
                                                     </section>

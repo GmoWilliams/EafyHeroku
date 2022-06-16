@@ -4,6 +4,8 @@ import { Helmet } from 'react-helmet';
 import Select from 'react-select';
 import swal from 'sweetalert';
 import Pdf from "react-to-pdf";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const reference3 = React.createRef();
 
@@ -491,11 +493,13 @@ function DescargarPDF_BC( {userEmail, userContraseña} ){
 
     };
 
-    const options = {
-        orientation: 'portrait',
-        unit: 'in',
-        format: [40,13]
-    };
+    const imprimirPDF = () => {
+        const doc = new jsPDF();
+        autoTable(doc, {html:"#tablaBC"});
+        console.log(doc);
+        doc.save("Balance de Comprobación.pdf");
+
+    }
 
     return(
         <div className="container micontenedor">
@@ -504,7 +508,7 @@ function DescargarPDF_BC( {userEmail, userContraseña} ){
             </Helmet>
             <h1>Tu Balance de Comprobación </h1>
                     <div className="col-md-auto align-items-center text-center">
-                    <h5>¿No es correcto? Pulsa "Actualizar Balance de Comprobación"</h5>
+                    <h5>Selecciona el periodo de tu reporte:</h5>
                     </div>
                     {/* generarReporteBC() */}
                     <h4>Mes Inicial: </h4>
@@ -527,7 +531,7 @@ function DescargarPDF_BC( {userEmail, userContraseña} ){
                     {/*Boton Balance de Comprobación*/}
                     <div className="col-md-auto align-items-center text-center">
                                 
-                                <a href="#myModal2" className="btn btn-primary btn-lg btn-costum-size" role="button" onClick={() => generarReporteBC()}>Actualizar Balance de Comprobación</a>
+                                <a href="#myModal2" className="btn btn-primary btn-lg btn-costum-size" role="button" onClick={() => generarReporteBC()}>Generar Balance de Comprobación</a>
                                 
                                 {/*
                                     Modalidad Balance de comprobacion generada al presionar el boton
@@ -539,34 +543,34 @@ function DescargarPDF_BC( {userEmail, userContraseña} ){
                                             <div className="modal-header">
                                                 <h5 className="modal-title" id="exampleModalLongTitle">Balance de Comprobación</h5>
                                                 
-                                                    <Pdf targetRef={reference3} filename="Balance de Comprobacion.pdf">
-                                                        {({ toPdf }) => <button className="btn btn-primary" onClick={toPdf}>Descargar PDF "Balance de Comprobación"</button>}
-                                                    </Pdf>
+                                                    
+                                                    <button className="btn btn-primary" onClick={()=>imprimirPDF()}>Descargar PDF "Balance de Comprobación"</button>
+                                                    
                                                 
                                             </div>
                                             <div className="modal-body">
                                                 <section className ="flex-container">
                                                     <table id="tablaBC" className="table-responsive table-borderless">
                                                         <thead>
-                                                            <tr>
-                                                            <th scope="col">C&nbsp;u&nbsp;e&nbsp;n&nbsp;t&nbsp;a</th>
-                                                            <th scope="col">N&nbsp;o&nbsp;m&nbsp;b&nbsp;r&nbsp;e</th>
-                                                            <th scope="col">Saldos Iniciales</th>
-                                                            <th scope="col"></th>
-                                                            <th scope="col"></th>
-                                                            <th scope="col">Saldos Actuales</th>
-                                                            </tr>
-                                                            <tr>
-                                                            <th scope="col"></th>
-                                                            <th scope="col"></th>
-                                                            <th scope="col">Deudor Acreedor</th>
-                                                            <th scope="col">Cargos</th>
-                                                            <th scope="col">Abonos</th>
-                                                            <th scope="col">Deudor Acreedor</th>
-                                                            </tr>
+                                                            
                                                         </thead>
                                                         <tbody>
-                                                            
+                                                            <tr>
+                                                                <th scope="col">C&nbsp;u&nbsp;e&nbsp;n&nbsp;t&nbsp;a</th>
+                                                                <th scope="col">N&nbsp;o&nbsp;m&nbsp;b&nbsp;r&nbsp;e</th>
+                                                                <th scope="col">Saldos Iniciales</th>
+                                                                <th scope="col"></th>
+                                                                <th scope="col"></th>
+                                                                <th scope="col">Saldos Actuales</th>
+                                                                </tr>
+                                                                <tr>
+                                                                <th scope="col"></th>
+                                                                <th scope="col"></th>
+                                                                <th scope="col">Deudor Acreedor</th>
+                                                                <th scope="col">Cargos</th>
+                                                                <th scope="col">Abonos</th>
+                                                                <th scope="col">Deudor Acreedor</th>
+                                                            </tr>
                                                         </tbody>
                                                     </table>
                                                 </section>

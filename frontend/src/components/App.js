@@ -1,5 +1,5 @@
 import { React, useEffect, useState } from "react";
-// react router dom
+import { useNavigate } from "react-router-dom";
 import { BrowserRouter as Router } from "react-router-dom";
 import Direccionamiento from "./Direccionamiento";
 import Header from "./partials/Header";
@@ -77,7 +77,7 @@ function App(){
                                         userEmail={userEmail} setUserEmail={setUserEmail}
                                         userContraseña={userContraseña} setUserContraseña={setUserContraseña}
                                         />
-                <Footer loggedIn={loggedIn} setLoggedIn={setLoggedIn} />
+                <Footer loggedIn={loggedIn} setLoggedIn={setLoggedIn} logOut={logOut} />
             </div>
         </Router>
     );

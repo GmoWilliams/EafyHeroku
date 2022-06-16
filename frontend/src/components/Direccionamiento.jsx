@@ -16,7 +16,7 @@ function Direccionamiento({loggedIn, setLoggedIn, userEmail, setUserEmail, userC
 
     return (
         <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Home loggedIn={loggedIn} />} />
             <Route path="/descargarPDF_BG" element={<PDF_BalanceG   userEmail={userEmail} 
                                                                     userContraseña={userContraseña}/>} />
             <Route path="/descargarPDF_ER" element={<PDF_EstadoR    userEmail={userEmail} 
@@ -26,8 +26,8 @@ function Direccionamiento({loggedIn, setLoggedIn, userEmail, setUserEmail, userC
             
             { !loggedIn ? <Route path="/login" element={<Login setUserEmail={setUserEmail} setUserContraseña={setUserContraseña} setLoggedIn={setLoggedIn}/>} /> : null }
             
-            { !loggedIn ? <Route path="/registro" element={<Registro setUserEmail={setUserEmail} setUserContraseña={setUserContraseña} />} /> : null }
-            <Route path="/dashboard" element={<Dashboard userEmail={userEmail} userContraseña={userContraseña} />} />
+            { !loggedIn ? <Route path="/registro" element={<Registro setUserEmail={setUserEmail} setUserContraseña={setUserContraseña} setLoggedIn={setLoggedIn}/>} /> : null }
+            { loggedIn ?<Route path="/dashboard" element={<Dashboard userEmail={userEmail} userContraseña={userContraseña} />} /> : null }
             {/*
             <Route element={<RequireAuth />}>
                 <Route path="/dashboard" element={<Dashboard />} />

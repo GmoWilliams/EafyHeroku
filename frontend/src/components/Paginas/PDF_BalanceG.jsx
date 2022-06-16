@@ -305,7 +305,7 @@ function DescargarPDF_BG( {userEmail, userContraseña} ){
     const options = {
         orientation: 'portrait',
         unit: 'in',
-        format: [40,13]
+        format: [18,16]
     };
 
     return(
@@ -316,8 +316,7 @@ function DescargarPDF_BG( {userEmail, userContraseña} ){
             <h1>Tu Balance General </h1>
             {/* <meta name="viewport" content="width=device-width, initial-scale=0.2"></meta> */}
                     <div className="col-md-auto align-items-center text-center">
-                    
-                    <h5>¿No es correcto? Pulsa "Actualizar Balance General"</h5>
+                    <h5>Selecciona el periodo de tu reporte:</h5>
                     </div>
                     {/* generarReporteBG() */}
                     <h4>Mes Inicial: </h4>
@@ -339,7 +338,7 @@ function DescargarPDF_BG( {userEmail, userContraseña} ){
         
                     {/*Boton balance general*/}
                     <div className="col-md-auto align-items-center text-center">
-                        <a href="#myModal" className="btn btn-primary btn-lg btn-costum-size" role="button" onClick={() => generarReporteBG()}>Actualizar Balance General</a>
+                        <a href="#myModal" className="btn btn-primary btn-lg btn-costum-size" role="button" onClick={() => generarReporteBG()}>Generar Balance General</a>
 
                         {/*
                         Modalidad balance general generada al presionar el boton
