@@ -62,6 +62,7 @@ function DescargarPDF_BC( {userEmail, userContraseña} ){
             "000-0500": [] //Resultados Deudoras
         };
         var subs = {}
+        setCuentasBC({});
 
         axios.all([
             axios.get(`/recibirCuentas/${userEmail}/${userContraseña}`), 

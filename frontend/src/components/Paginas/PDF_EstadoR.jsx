@@ -69,6 +69,7 @@ function DescargarPDF_ER( {userEmail, userContraseña} ){
         var diccionarioCN = {};
 
         console.log("ruta: ", `/recibir_FechasDe_Movimientos/${Mes_Rep1}/${Mes_Rep2}/${userEmail}/${userContraseña}`);
+        setCuentasER({});
 
         axios.all([
             axios.get(`/recibirCuentas/${userEmail}/${userContraseña}`), 

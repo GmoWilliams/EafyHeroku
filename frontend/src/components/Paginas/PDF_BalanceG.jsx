@@ -11,7 +11,6 @@ const Swal = require('sweetalert2');
 
 function DescargarPDF_BG( {userEmail, userContraseña} ){
 
-    const [reportGenerated, setReportGenerated] = useState(false);
     const [cuentasBG, setCuentasBG] = useState({});
     const [totales, setTotales] = useState([0,0,0,0,0,0,0,0]);
 
@@ -165,6 +164,8 @@ function DescargarPDF_BG( {userEmail, userContraseña} ){
         console.log(Mes_Rep1);
         console.log(Mes_Rep2);
 
+        resetState();
+
         axios.get(`/recibir_FechasDe_Movimientos/${Mes_Rep1}/${Mes_Rep2}/${userEmail}/${userContraseña}`).then(resp => {
             const datos = resp.data;
             console.log(datos); 
@@ -297,8 +298,6 @@ function DescargarPDF_BG( {userEmail, userContraseña} ){
 
             
             
-            
-            setReportGenerated(current => !current);
         });
     };
 
@@ -307,6 +306,7 @@ function DescargarPDF_BG( {userEmail, userContraseña} ){
         unit: 'in',
         format: [18,16]
     };
+
 
     return(
         <div className="container micontenedor">
