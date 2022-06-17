@@ -97,7 +97,7 @@ app.post("/login", async (req, res) => {
     const user = await Usuario.findOne({email})
 
     if(!user){
-        res.status(201)
+        res.status(401)
         res.send({ error: 'Usuario no encontrado' })
         return 
     }
@@ -111,7 +111,7 @@ app.post("/login", async (req, res) => {
     }
 
     if(!checkPassword){
-        res.status(202)
+        res.status(403)
         res.send({
             error: 'Contraseña Invalida'
         })
