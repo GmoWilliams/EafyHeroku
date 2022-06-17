@@ -6,7 +6,7 @@ const Swal = require('sweetalert2');
 
 
 
-function Registro() {
+function Registro({setUserEmail, setUserContraseña, setLoggedIn}) {
 
     
     const navigate = useNavigate();
@@ -68,8 +68,11 @@ function Registro() {
 
         if (status===200){
             axios.post("/registrar", nUsuario);
-            Swal.fire('Te haz registrado correctamente!')
+            Swal.fire('Te has registrado correctamente!');
             
+            setUserEmail(nUsuario.email);
+            setUserContraseña(nUsuario.contraseña);
+            setLoggedIn(true);
             navigate('/dashboard')
         }
         if (status===201){

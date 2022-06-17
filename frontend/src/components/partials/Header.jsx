@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, NavLink } from "react-router-dom";
 
-function Header() {
+function Header({loggedIn, setLoggedIn, logOut}) {
     return (
         <header>
             {/*
@@ -34,15 +34,11 @@ function Header() {
                     <div class="collapse navbar-collapse" id="navbarCollapse">
                         <div class="navbar-nav">
                             <a href="/" class="nav-item nav-link active">Inicio</a>
-                            <a href="/registro" class="nav-item nav-link">Registro</a>
-                            <a href="/login" class="nav-item nav-link">Login</a>
-                            <a href="/dashboard" class="nav-item nav-link">Dashboard</a>
+                            { !loggedIn ? <a href="/registro" class="nav-item nav-link">Registro</a> : null}
+                            { !loggedIn ? <a href="/login" class="nav-item nav-link">Login</a> : null }
+                            { loggedIn ? <a href="/dashboard" class="nav-item nav-link">Dashboard</a> : null }
+                            {loggedIn? <a class="nav-item nav-link" onClick={() => logOut()} href="/"> Log Out</a> : null }
                         </div>
-                        {/*
-                        <div class="navbar-nav ms-auto">
-                            <a href="/" class="nav-item nav-link">Logout</a>
-                        </div>
-                        */}
                     </div>
 
                 </div>

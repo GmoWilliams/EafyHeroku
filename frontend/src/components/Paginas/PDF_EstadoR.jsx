@@ -1,20 +1,63 @@
-import React, { useEffect, useState } from "react";
+import React, {useRef, useLayoutEffect, useState } from "react";
 import axios from "axios";
-import { Helmet } from 'react-helmet'
+import { Helmet } from 'react-helmet';
+import Select from 'react-select';
 import swal from 'sweetalert';
 import Pdf from "react-to-pdf";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import html2canvas from "html2canvas";
+
+
 
 const reference2 = React.createRef();
 
 const Swal = require('sweetalert2');
 
-function DescargarPDF_ER(){
+function DescargarPDF_ER( {userEmail, userContraseña} ){
 
     //Estado ER
     const [cuentasER, setCuentasER] = useState({});
 
     var Mes_Rep1 = "ene";
     var Mes_Rep2 = "dic";
+
+    const meses = [
+        { label: 'Enero',       value: 'ene' },
+        { label: 'Febrero',     value: 'feb'},
+        { label: 'Marzo',       value: 'mar' },
+        { label: 'Abril',       value: 'abr' },
+        { label: 'Mayo',        value: 'may ' },
+        { label: 'Junio',       value: 'jun' },
+        { label: 'Julio',       value: 'jul' },
+        { label: 'Agosto',      value: 'ago' },
+        { label: 'Septiembre',  value: 'sep'},
+        { label: 'Octubre',     value: 'oct' },
+        { label: 'Noviembre',   value: 'nov'},
+        { label: 'Diciembre',   value: 'dic'}
+    ]
+
+    const targetRef = useRef();
+    const [dimensions, setDimensions] = useState({ width:0, height: 0 });
+
+    useLayoutEffect(() => {
+        if (targetRef.current) {
+        setDimensions({
+            width: targetRef.current.offsetWidth,
+            height: targetRef.current.offsetHeight
+        });
+        }
+    }, []);
+
+    const handleSelect_Mes_Rep1 = (event) => {
+        Mes_Rep1 = event.value;
+        console.log(Mes_Rep1);
+    }
+
+    const handleSelect_Mes_Rep2 = (event) => {
+        Mes_Rep2 = event.value;
+        console.log(Mes_Rep2);
+    }
 
     const generarReporteER = () => {
         var ingresosTotal = [0, 0];
@@ -25,17 +68,23 @@ function DescargarPDF_ER(){
         var asignacion = {};
         var diccionarioCN = {};
 
+        console.log("ruta: ", `/recibir_FechasDe_Movimientos/${Mes_Rep1}/${Mes_Rep2}/${userEmail}/${userContraseña}`);
+
         axios.all([
-            axios.get('/recibirCuentas'), 
-            axios.get(`/recibir_FechasDe_Movimientos/${Mes_Rep1}/${Mes_Rep2}`)
+            axios.get(`/recibirCuentas/${userEmail}/${userContraseña}`), 
+            axios.get(`/recibir_FechasDe_Movimientos/${Mes_Rep1}/${Mes_Rep2}/${userEmail}/${userContraseña}`)
         ])
         .then(axios.spread((resp1, resp2) => {
             var catalogoCuentas = resp1.data;
             var movimientos = resp2.data;
             var pendientes = [];
-
+            
+            console.log("Comenzamos");
+            console.log(catalogoCuentas);
+            console.log(movimientos);
             //Revisar el catálogo y ver cuentas que estarán en el reporte ER
             for (let i = 0; i < catalogoCuentas.length; i++) {
+                setCuentasER(cuentasER[catalogoCuentas[i]["Codigo"]] = [0, 0]);
                 if (parseInt(catalogoCuentas[i]["Codigo"].substring(0,3)) >= 400 && parseInt(catalogoCuentas[i]["Codigo"].substring(0,3)) < 500) {
                     ingresos.push(catalogoCuentas[i]["Codigo"]);
                     diccionarioCN[catalogoCuentas[i]["Codigo"]] = catalogoCuentas[i]["Nombre"];
@@ -65,6 +114,9 @@ function DescargarPDF_ER(){
                     diccionarioCN[catalogoCuentas[i]["Nombre"]] = catalogoCuentas[i]["Codigo"];
                 }
             }
+            console.log("A ver las cuentas");
+            console.log(pendientes);
+            console.log(cuentasER);
 
             //Analizar movimientos para conseguir los totales de las subcategorías 
             for (let i = 0; i < movimientos.length; i++) {
@@ -84,10 +136,15 @@ function DescargarPDF_ER(){
 
                     console.log("Codigo decidido:", codigo);
                     if (movimientos[i]["Total_Cargos"] > 0 && movimientos[i]["Total_Abonos"] == 0) {
-                        setCuentasER(cuentasER[codigo] = [movimientos[i]["Total_Cargos"], movimientos[i]["Total_Saldo"]]);
+                        var currObj = cuentasER[codigo];
+                        currObj[0] += movimientos[i]["Total_Cargos"];
+                        currObj[1] += movimientos[i]["Total_Saldo"];
+                        setCuentasER(cuentasER[codigo] = currObj);
                     } else{
-                        // if (movimientos[i]["Total_Abonos"] > 0 && movimientos[i]["Total_Cargos"] == 0) 
-                        setCuentasER(cuentasER[codigo] = [movimientos[i]["Total_Abonos"],movimientos[i]["Total_Saldo"]]);
+                        var currObj = cuentasER[codigo];
+                        currObj[0] += movimientos[i]["Total_Abonos"];
+                        currObj[1] += movimientos[i]["Total_Saldo"];
+                        setCuentasER(cuentasER[codigo] = currObj);
                     }
                 }
             }
@@ -98,11 +155,15 @@ function DescargarPDF_ER(){
                     ingresosTotal[1] += cuentasER[ingresos[i]][1];
                 }
             }
+            console.log("Calculando total de ingresos");
             //Calcular el total de cada categoría de egresos
             for (let i = 0; i<egresos.length; i++) {
                 var currTotal = [0,0];
-                if (cuentasER[egresos[i]] == null) {
+                console.log("Vamos con la categoria: ", diccionarioCN[egresos[i]]);
+                console.log(cuentasER[egresos[i]]);
+                if (cuentasER[egresos[i]][0] == 0 && cuentasER[egresos[i]][1] == 0) {
                     for (let j = 0; j<egresosSub[egresos[i]].length; j++) {
+                        console.log("Vamos con la subcategoria: ", diccionarioCN[egresosSub[egresos[i]]]);
                         if(cuentasER[egresosSub[egresos[i]][j]] != null) {
                             currTotal[0] += cuentasER[egresosSub[egresos[i]][j]][0];
                             currTotal[1] += cuentasER[egresosSub[egresos[i]][j]][1];
@@ -117,6 +178,12 @@ function DescargarPDF_ER(){
                 }
             }
             console.log(diccionarioCN);
+            console.log(ingresos);
+            console.log(egresos);
+            console.log(egresosSub);
+            console.log(ingresosTotal);
+            console.log(egresosTotal);
+            console.log(cuentasER);
             //Añadir contenido HTML a la página: 
 
             //Añadir titulo de ingresos: 
@@ -129,7 +196,7 @@ function DescargarPDF_ER(){
 
             //Agregar subcategorías de ingresos:
             for (let i = 0; i < ingresos.length; i++) {
-                if (cuentasER[ingresos[i]] != null) {
+                if (cuentasER[ingresos[i]] != null && (cuentasER[ingresos[i]][0] != 0 || cuentasER[ingresos[i]][1] != 0)) {
                     var Irow = ERTable.insertRow(ERTable.rows.length);
                     var ICell0 = Irow.insertCell(0);
                     var Ielement = document.createElement("p");
@@ -195,7 +262,7 @@ function DescargarPDF_ER(){
             //Agregar cada categoria de egresos
             egresos.sort();
             for (let i = 0; i < egresos.length; i++) {
-                if (cuentasER[egresos[i]] != null && (cuentasER[egresos[i]][0] != 0 || cuentasER[egresos[i]][1] != 0)) {
+                if (cuentasER[egresos[i]]  && (cuentasER[egresos[i]][0] != 0 || cuentasER[egresos[i]][0] != 0)) {
                     //Agregar título de categoría
                     var Erow = ERTable.insertRow(ERTable.rows.length);
                     var Ecell0 = Erow.insertCell(0);
@@ -206,7 +273,7 @@ function DescargarPDF_ER(){
                     //Agregar cada subcategoría
                     egresosSub[egresos[i]].sort();
                     for (let j = 0; j<egresosSub[egresos[i]].length;j++) {
-                        if (cuentasER[egresosSub[egresos[i]][j]] != null) {
+                        if (cuentasER[egresosSub[egresos[i]][j]] != null && (cuentasER[egresosSub[egresos[i]][j]][0] != 0 || cuentasER[egresosSub[egresos[i]][j]][1] != 0)) {
                             var SErow = ERTable.insertRow(ERTable.rows.length);
 
                             var SEcell0 = SErow.insertCell(0);
@@ -321,13 +388,47 @@ function DescargarPDF_ER(){
         }));
 
 
-    };   
+    }; 
 
     const options = {
         orientation: 'portrait',
         unit: 'in',
-        format: [40,13]
+        format: [612,792]
     };
+
+    /*
+    var divHeight = dimensions.height
+    var divWidth = dimensions.width;
+    var ratio = divHeight / divWidth;
+    
+
+    
+    const imprimirPDF = () => {
+        html2canvas(document.getElementById("myModal1"), {
+            height: divHeight,
+            width: divWidth,
+            onrendered: function(canvas) {
+                console.log("aver qpez");
+                var image = canvas.toDataURL("image/jpeg");
+                var doc = new jsPDF(); // using defaults: orientation=portrait, unit=mm, size=A4
+                var width = doc.internal.pageSize.getWidth();    
+                var height = doc.internal.pageSize.getHeight();
+                height = ratio * width;
+                doc.addImage(image, 'JPEG', 0, 0, width-20, height-10);
+                doc.save('Estado de Resultados.pdf'); //Download the rendered PDF.
+                console.log("intento de descarga");
+            }
+        });
+    }*/
+
+    const imprimirPDF = () => {
+        const doc = new jsPDF();
+        autoTable(doc, {html:"#tablaER"});
+        console.log(doc);
+        doc.save("Estado de Resultados.pdf");
+
+    }
+    
 
     return(
         <div className="container micontenedor">
@@ -336,42 +437,59 @@ function DescargarPDF_ER(){
             </Helmet>
             <h1>Tu Estado de Resultados </h1>
                 <div className="col-md-auto align-items-center text-center">
-                    <h5>¿No es correcto? Pulsa "Actualizar Estado de Resultados"</h5>
+                    <h5>Selecciona el periodo de tu reporte:</h5>
                 </div>
-                    {/*generarReporteER()*/}
+                    {/* generarReporteER() */}
+                    <h4>Mes Inicial: </h4>
+                    <div className="col-md-auto">
+                        <Select name="mes1" required 
+                            options = {meses}
+                            onChange = {handleSelect_Mes_Rep1}
+                        />
+                            
+                    </div>
+                    <h4>Mes Final: </h4>
+                    <div className="col-md-auto">
+                        <Select name="mes2" required 
+                            options = {meses}
+                            onChange = {handleSelect_Mes_Rep2}
+                        />
+                            
+                    </div>
         
                     {/*Boton Estado de Resultados*/}
                     <div className="col-md-auto align-items-center text-center">
-                                <a href="#myModal1" className="btn btn-primary btn-lg btn-costum-size" role="button" onClick={() => generarReporteER()}>Actualizar Estado de Resultados</a>
+                                <a href="#myModal1" className="btn btn-primary btn-lg btn-costum-size" role="button" onClick={() => generarReporteER()}>Generar Estado de Resultados</a>
                                 
                                 {/*
                                 Modalidad Estado de resultados generada al presionar el boton
                                 */}
     
-                                <div id="myModal1" ref={reference2} >
+                                <div id="myModal1" ref={targetRef} >
                                     
                                         <div className="modal-dialog modal-xl" role="document">
                                             <div className="modal-content">
                                                 <div className="modal-header">
                                                     <h5 className="modal-title" id="exampleModalLongTitle">Estado de Resultados</h5>
                                                     
-                                                    <Pdf targetRef={reference2} filename="Estado de Resultados.pdf">
-                                                        {({ toPdf }) => <button className="btn btn-primary" onClick={toPdf}>Descargar PDF "Estado de Resultados"</button>}
-                                                    </Pdf>
+                                                    
+                                                        {<button className="btn btn-primary" onClick={() => imprimirPDF()}>Descargar PDF "Estado de Resultados"</button>}
+                                                    
                                                 
                                                 </div>
                                                 <div className="modal-body">
                                                     <section className ="flex-container">
                                                         <table id="tablaER" className="table-responsive table-borderless">
                                                             <thead>
-                                                                <th scope="col"></th>
-                                                                <th className="tituloCentro" scope="col">Periodo</th>
-                                                                <th className="tituloCentro" scope="col">%</th>
-                                                                <th className="tituloCentro" scope="col">Acomulado</th>
-                                                                <th className="tituloCentro" scope="col">%</th>
                                                             </thead>
                                                             <tbody>
-
+                                                                <tr>
+                                                                    <th scope="col"></th>
+                                                                    <th className="tituloCentro" scope="col">Periodo</th>
+                                                                    <th className="tituloCentro" scope="col">%</th>
+                                                                    <th className="tituloCentro" scope="col">Acomulado</th>
+                                                                    <th className="tituloCentro" scope="col">%</th>
+                                                                </tr>
                                                             </tbody>
                                                         </table>
                                                     </section>

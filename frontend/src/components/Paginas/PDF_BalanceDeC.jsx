@@ -1,17 +1,45 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Helmet } from 'react-helmet'
+import { Helmet } from 'react-helmet';
+import Select from 'react-select';
 import swal from 'sweetalert';
 import Pdf from "react-to-pdf";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const reference3 = React.createRef();
 
 const Swal = require('sweetalert2');
 
-function DescargarPDF_BC(){
+function DescargarPDF_BC( {userEmail, userContraseña} ){
 
     var Mes_Rep1 = "ene";
     var Mes_Rep2 = "dic";
+
+    const meses = [
+        { label: 'Enero',       value: 'ene' },
+        { label: 'Febrero',     value: 'feb'},
+        { label: 'Marzo',       value: 'mar' },
+        { label: 'Abril',       value: 'abr' },
+        { label: 'Mayo',        value: 'may ' },
+        { label: 'Junio',       value: 'jun' },
+        { label: 'Julio',       value: 'jul' },
+        { label: 'Agosto',      value: 'ago' },
+        { label: 'Septiembre',  value: 'sep'},
+        { label: 'Octubre',     value: 'oct' },
+        { label: 'Noviembre',   value: 'nov'},
+        { label: 'Diciembre',   value: 'dic'}
+    ]
+
+    const handleSelect_Mes_Rep1 = (event) => {
+        Mes_Rep1 = event.value;
+        console.log(Mes_Rep1);
+    }
+
+    const handleSelect_Mes_Rep2 = (event) => {
+        Mes_Rep2 = event.value;
+        console.log(Mes_Rep2);
+    }
 
     //Estado BC
     const [cuentasBC, setCuentasBC] = useState({});
@@ -36,8 +64,8 @@ function DescargarPDF_BC(){
         var subs = {}
 
         axios.all([
-            axios.get('/recibirCuentas'), 
-            axios.get(`/recibir_FechasDe_Movimientos/${Mes_Rep1}/${Mes_Rep2}`)
+            axios.get(`/recibirCuentas/${userEmail}/${userContraseña}`), 
+            axios.get(`/recibir_FechasDe_Movimientos/${Mes_Rep1}/${Mes_Rep2}/${userEmail}/${userContraseña}`)
           ])
           .then(axios.spread((resp1, resp2) => {
             var catalogoCuentas = resp1.data;
@@ -104,7 +132,12 @@ function DescargarPDF_BC(){
                         sInicial = movimientos[i]["Total_Saldo"] + movimientos[i]["Total_Abonos"] - movimientos[i]["Total_Cargos"];
                     }
                     if(movimientos[i]["Categoria_Total"] == "Movimiento de Cuenta Común") {
-                        setCuentasBC(cuentasBC[movimientos[i]["Cuenta"]] = [sInicial, movimientos[i]["Total_Cargos"], movimientos[i]["Total_Abonos"], movimientos[i]["Total_Saldo"]]);
+                        var currObj = cuentasBC[movimientos[i]["Cuenta"]];
+                        currObj[0] += sInicial;
+                        currObj[1] += movimientos[i]["Total_Cargos"];
+                        currObj[2] += movimientos[i]["Total_Abonos"];
+                        currObj[3] += movimientos[i]["Total_Saldo"];
+                        setCuentasBC(cuentasBC[movimientos[i]["Cuenta"]] = currObj);
                     } else {
                         var codigo = "";
                         if (movimientos[i]["Cuenta"] != diccionarioCN[movimientos[i]["Categoria_Total"]] && diccionarioCN[movimientos[i]["Categoria_Total"]] != null) {
@@ -116,7 +149,12 @@ function DescargarPDF_BC(){
                         } else {
                             codigo = movimientos[i]["Cuenta"];
                         }
-                        setCuentasBC(cuentasBC[codigo] = [sInicial, movimientos[i]["Total_Cargos"], movimientos[i]["Total_Abonos"], movimientos[i]["Total_Saldo"]]);
+                        var currObj = cuentasBC[movimientos[i]["Cuenta"]];
+                        currObj[0] += sInicial;
+                        currObj[1] += movimientos[i]["Total_Cargos"];
+                        currObj[2] += movimientos[i]["Total_Abonos"];
+                        currObj[3] += movimientos[i]["Total_Saldo"];
+                        setCuentasBC(cuentasBC[codigo] = currObj);
                         
                     }
                 }
@@ -405,6 +443,7 @@ function DescargarPDF_BC(){
                 }
             }
             orden.push("000-0500");
+            categoriasGrandes["000-0500"].sort();
             for (let i = 0; i < categoriasGrandes["000-0500"].length; i++) {
                 orden.push(categoriasGrandes["000-0500"][i]);
                 subs[categoriasGrandes["000-0500"][i]].sort();
@@ -454,11 +493,13 @@ function DescargarPDF_BC(){
 
     };
 
-    const options = {
-        orientation: 'portrait',
-        unit: 'in',
-        format: [40,13]
-    };
+    const imprimirPDF = () => {
+        const doc = new jsPDF();
+        autoTable(doc, {html:"#tablaBC"});
+        console.log(doc);
+        doc.save("Balance de Comprobación.pdf");
+
+    }
 
     return(
         <div className="container micontenedor">
@@ -467,14 +508,30 @@ function DescargarPDF_BC(){
             </Helmet>
             <h1>Tu Balance de Comprobación </h1>
                     <div className="col-md-auto align-items-center text-center">
-                    <h5>¿No es correcto? Pulsa "Actualizar Balance de Comprobación"</h5>
+                    <h5>Selecciona el periodo de tu reporte:</h5>
                     </div>
                     {/* generarReporteBC() */}
+                    <h4>Mes Inicial: </h4>
+                    <div className="col-md-auto">
+                        <Select name="mes1" required 
+                            options = {meses}
+                            onChange = {handleSelect_Mes_Rep1}
+                        />
+                            
+                    </div>
+                    <h4>Mes Final: </h4>
+                    <div className="col-md-auto">
+                        <Select name="mes2" required 
+                            options = {meses}
+                            onChange = {handleSelect_Mes_Rep2}
+                        />
+                            
+                    </div>
         
                     {/*Boton Balance de Comprobación*/}
                     <div className="col-md-auto align-items-center text-center">
                                 
-                                <a href="#myModal2" className="btn btn-primary btn-lg btn-costum-size" role="button" onClick={() => generarReporteBC()}>Actualizar Balance de Comprobación</a>
+                                <a href="#myModal2" className="btn btn-primary btn-lg btn-costum-size" role="button" onClick={() => generarReporteBC()}>Generar Balance de Comprobación</a>
                                 
                                 {/*
                                     Modalidad Balance de comprobacion generada al presionar el boton
@@ -486,34 +543,34 @@ function DescargarPDF_BC(){
                                             <div className="modal-header">
                                                 <h5 className="modal-title" id="exampleModalLongTitle">Balance de Comprobación</h5>
                                                 
-                                                    <Pdf targetRef={reference3} filename="Balance de Comprobacion.pdf">
-                                                        {({ toPdf }) => <button className="btn btn-primary" onClick={toPdf}>Descargar PDF "Balance de Comprobación"</button>}
-                                                    </Pdf>
+                                                    
+                                                    <button className="btn btn-primary" onClick={()=>imprimirPDF()}>Descargar PDF "Balance de Comprobación"</button>
+                                                    
                                                 
                                             </div>
                                             <div className="modal-body">
                                                 <section className ="flex-container">
                                                     <table id="tablaBC" className="table-responsive table-borderless">
                                                         <thead>
-                                                            <tr>
-                                                            <th scope="col">C&nbsp;u&nbsp;e&nbsp;n&nbsp;t&nbsp;a</th>
-                                                            <th scope="col">N&nbsp;o&nbsp;m&nbsp;b&nbsp;r&nbsp;e</th>
-                                                            <th scope="col">Saldos Iniciales</th>
-                                                            <th scope="col"></th>
-                                                            <th scope="col"></th>
-                                                            <th scope="col">Saldos Actuales</th>
-                                                            </tr>
-                                                            <tr>
-                                                            <th scope="col"></th>
-                                                            <th scope="col"></th>
-                                                            <th scope="col">Deudor Acreedor</th>
-                                                            <th scope="col">Cargos</th>
-                                                            <th scope="col">Abonos</th>
-                                                            <th scope="col">Deudor Acreedor</th>
-                                                            </tr>
+                                                            
                                                         </thead>
                                                         <tbody>
-                                                            
+                                                            <tr>
+                                                                <th scope="col">C&nbsp;u&nbsp;e&nbsp;n&nbsp;t&nbsp;a</th>
+                                                                <th scope="col">N&nbsp;o&nbsp;m&nbsp;b&nbsp;r&nbsp;e</th>
+                                                                <th scope="col">Saldos Iniciales</th>
+                                                                <th scope="col"></th>
+                                                                <th scope="col"></th>
+                                                                <th scope="col">Saldos Actuales</th>
+                                                                </tr>
+                                                                <tr>
+                                                                <th scope="col"></th>
+                                                                <th scope="col"></th>
+                                                                <th scope="col">Deudor Acreedor</th>
+                                                                <th scope="col">Cargos</th>
+                                                                <th scope="col">Abonos</th>
+                                                                <th scope="col">Deudor Acreedor</th>
+                                                            </tr>
                                                         </tbody>
                                                     </table>
                                                 </section>
