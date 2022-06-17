@@ -47,14 +47,14 @@ function Login( {setUserEmail, setUserContraseña, setLoggedIn} ){
                     text: 'Sin respuesta del servidor'
                 })
             }
-            else if (err.response?.status===404){
+            else if (err.response?.status===401){
                 Swal.fire({
                     icon: 'error',
                     title: 'ERROR:',
                     text: 'El correo introducido no ha sido registrado'
                 })
             }
-            else if (err.response?.status===401){
+            else if (err.response?.status===403){
                 Swal.fire({
                     icon: 'error',
                     title: 'ERROR:',
